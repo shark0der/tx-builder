@@ -1,4 +1,4 @@
-import WalletConnect from "./WalletConnect.jsx";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 function Navbar() {
   return (
@@ -18,7 +18,7 @@ function Navbar() {
           </svg>
           <span>ETH Wallet</span>
         </a>
-        <WalletConnect />
+        <ConnectButton />
       </div>
     </nav>
   );

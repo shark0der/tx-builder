@@ -21,11 +21,11 @@ const config = createConfig({
 
 const queryClient = new QueryClient();
 
-export function AppKitProvider({ children }) {
+export function WalletProvider({ children }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider initialChain={mainnet}>
+        <RainbowKitProvider modalSize="compact" initialChain={mainnet}>
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>
