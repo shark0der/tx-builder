@@ -1,4 +1,4 @@
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+// import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 function Navbar() {
   return (
@@ -15,7 +15,7 @@ function Navbar() {
           />
           <span>Transaction builder</span>
         </a>
-        <ConnectButton />
+        {/* <ConnectButton /> */}
       </div>
     </nav>
   );

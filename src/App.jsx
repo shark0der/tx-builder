@@ -1,5 +1,5 @@
 import Navbar from "./Navbar.jsx";
-import BalanceDisplay from "./BalanceDisplay.jsx";
+// import BalanceDisplay from "./BalanceDisplay.jsx";
 import TransactionBuilder from "./TransactionBuilder.jsx";
 import "./App.css";
 
