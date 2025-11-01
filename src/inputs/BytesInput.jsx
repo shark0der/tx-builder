@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function BytesInput({ value, onChange, type = "bytes", id }) {
+function BytesInput({ value, onChange, onValidationChange, type = "bytes", id }) {
   const [error, setError] = useState("");
 
   // Extract byte size from type (e.g., bytes32 -> 32, bytes -> null for dynamic)
@@ -10,9 +10,10 @@ function BytesInput({ value, onChange, type = "bytes", id }) {
   };
 
   const validateValue = (inputValue) => {
-    if (!inputValue || inputValue.trim() === "") {
+    // Guard against non-string values (can happen during component transitions)
+    if (typeof inputValue !== 'string' || !inputValue || inputValue.trim() === "") {
       setError("");
-      return true;
+      return false;
     }
 
     const trimmedValue = inputValue.trim();
@@ -49,14 +50,18 @@ function BytesInput({ value, onChange, type = "bytes", id }) {
   const handleChange = (e) => {
     const newValue = e.target.value;
     onChange(newValue);
-    validateValue(newValue);
+    const isValid = validateValue(newValue);
+    if (onValidationChange) {
+      onValidationChange(isValid);
+    }
   };
 
   useEffect(() => {
-    if (value) {
-      validateValue(value);
+    const isValid = validateValue(value);
+    if (onValidationChange) {
+      onValidationChange(isValid);
     }
-  }, [value]);
+  }, [value, onValidationChange]);
 
   const byteSize = getByteSize();
   const placeholder = byteSize
@@ -68,7 +73,7 @@ function BytesInput({ value, onChange, type = "bytes", id }) {
       <input
         type="text"
         id={id}
-        value={value || ""}
+        value={typeof value === 'string' ? value : ""}
         onChange={handleChange}
         placeholder={placeholder}
         className={`w-full p-2 border rounded-md bg-white text-gray-900 font-mono text-sm ${

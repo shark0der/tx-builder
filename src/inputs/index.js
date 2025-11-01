@@ -4,6 +4,6 @@ export { default as IntInput } from "./IntInput";
 export { default as AddressInput } from "./AddressInput";
 export { default as StringInput } from "./StringInput";
 export { default as BytesInput } from "./BytesInput";
+export { default as ArrayInput } from "./ArrayInput";
 export { default as InputRouter } from "./InputRouter";
 export { default } from "./InputRouter";
-

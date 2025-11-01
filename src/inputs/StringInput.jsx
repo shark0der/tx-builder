@@ -1,7 +1,16 @@
-function StringInput({ value, onChange, id }) {
+import { useEffect } from "react";
+
+function StringInput({ value, onChange, onValidationChange, id }) {
   const handleChange = (e) => {
     onChange(e.target.value);
   };
+
+  // Empty strings are valid values in Solidity
+  useEffect(() => {
+    if (onValidationChange) {
+      onValidationChange(true);
+    }
+  }, [value, onValidationChange]);
 
   return (
     <div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function IntInput({ value, onChange, type = "int256", id }) {
+function IntInput({ value, onChange, onValidationChange, type = "int256", id }) {
   const [error, setError] = useState("");
 
   // Extract bit size from type (e.g., int256 -> 256, int -> 256)
@@ -12,7 +12,7 @@ function IntInput({ value, onChange, type = "int256", id }) {
   const validateValue = (inputValue) => {
     if (!inputValue || inputValue.trim() === "") {
       setError("");
-      return true;
+      return false;
     }
 
     // Check if it's a valid signed integer
@@ -50,14 +50,18 @@ function IntInput({ value, onChange, type = "int256", id }) {
   const handleChange = (e) => {
     const newValue = e.target.value;
     onChange(newValue);
-    validateValue(newValue);
+    const isValid = validateValue(newValue);
+    if (onValidationChange) {
+      onValidationChange(isValid);
+    }
   };
 
   useEffect(() => {
-    if (value) {
-      validateValue(value);
+    const isValid = validateValue(value);
+    if (onValidationChange) {
+      onValidationChange(isValid);
     }
-  }, [value]);
+  }, [value, onValidationChange]);
 
   return (
     <div>

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 
-function AddressInput({ value, onChange, id }) {
+function AddressInput({ value, onChange, onValidationChange, id }) {
   const [error, setError] = useState("");
 
   const validateAddress = (address) => {
     if (!address || address.trim() === "") {
       setError("");
-      return true;
+      return false;
     }
 
     const trimmedAddress = address.trim();
@@ -37,14 +37,18 @@ function AddressInput({ value, onChange, id }) {
   const handleChange = (e) => {
     const newValue = e.target.value;
     onChange(newValue);
-    validateAddress(newValue);
+    const isValid = validateAddress(newValue);
+    if (onValidationChange) {
+      onValidationChange(isValid);
+    }
   };
 
   useEffect(() => {
-    if (value) {
-      validateAddress(value);
+    const isValid = validateAddress(value);
+    if (onValidationChange) {
+      onValidationChange(isValid);
     }
-  }, [value]);
+  }, [value, onValidationChange]);
 
   return (
     <div>

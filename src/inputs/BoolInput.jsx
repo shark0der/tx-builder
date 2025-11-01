@@ -1,7 +1,16 @@
-function BoolInput({ value, onChange, id }) {
+import { useEffect } from "react";
+
+function BoolInput({ value, onChange, onValidationChange, id }) {
   const handleToggle = () => {
     onChange(!value);
   };
+
+  // Bool inputs are always valid
+  useEffect(() => {
+    if (onValidationChange) {
+      onValidationChange(true);
+    }
+  }, [value, onValidationChange]);
 
   return (
     <label className="flex items-center gap-3 cursor-pointer">

@@ -3,16 +3,25 @@ import { encodeFunctionData } from "viem";
 import { addresses, abis } from "@nexusmutual/deployments";
 import InputRouter from "./inputs/InputRouter";
 import SearchableDropdown from "./inputs/SearchableDropdown";
+import { TEST_CONTRACT_ADDRESS, TEST_CONTRACT_ABI } from "./testContract";
 
 function TransactionBuilder() {
   const [selectedContract, setSelectedContract] = useState("");
   const [selectedFunction, setSelectedFunction] = useState("");
   const [functionArgs, setFunctionArgs] = useState({});
+  const [argValidation, setArgValidation] = useState({});
   const [ethValue, setEthValue] = useState("");
 
   // Get list of contracts that have ABIs
   const availableContracts = useMemo(() => {
     const contractsWithAbis = [];
+
+    // Add test contract first
+    contractsWithAbis.push({
+      name: "🧪 ArrayTestContract",
+      address: TEST_CONTRACT_ADDRESS,
+    });
+
     for (const [name, address] of Object.entries(addresses)) {
       // Check if this contract has an ABI in the abis object
       if (abis[name]) {
@@ -40,7 +49,12 @@ function TransactionBuilder() {
   const writeFunctions = useMemo(() => {
     if (!selectedContract) return [];
 
-    const abi = abis[selectedContract];
+    // Check if it's the test contract
+    const abi =
+      selectedContract === "🧪 ArrayTestContract"
+        ? TEST_CONTRACT_ABI
+        : abis[selectedContract];
+
     if (!abi) return [];
 
     // Filter for write functions (not view or pure)
@@ -84,6 +98,7 @@ function TransactionBuilder() {
   const handleFunctionChange = (value) => {
     setSelectedFunction(value);
     setFunctionArgs({});
+    setArgValidation({});
     setEthValue("");
   };
 
@@ -93,6 +108,58 @@ function TransactionBuilder() {
       [paramName]: value,
     }));
   };
+
+  const handleArgValidation = (paramName, isValid) => {
+    setArgValidation((prev) => ({
+      ...prev,
+      [paramName]: isValid,
+    }));
+  };
+
+  // JSON representation of transaction data
+  const jsonTxData = useMemo(() => {
+    if (!selectedFunctionAbi) return "";
+
+    try {
+      // Prepare args array in the correct order (viem format)
+      const args = selectedFunctionAbi.inputs.map((input, index) => {
+        const paramName = input.name || `arg${index}`;
+        return functionArgs[paramName];
+      });
+
+      // Check if all required args are provided
+      const hasAllArgs = selectedFunctionAbi.inputs.every((input, index) => {
+        const paramName = input.name || `arg${index}`;
+        const value = functionArgs[paramName];
+
+        // For arrays, check if it exists (empty arrays are valid)
+        if (Array.isArray(value)) {
+          return true;
+        }
+
+        // For other types, check if not empty
+        return value !== undefined && value !== "";
+      });
+
+      if (!hasAllArgs) return "";
+
+      // Check if all args are valid
+      const allArgsValid = selectedFunctionAbi.inputs.every((input, index) => {
+        const paramName = input.name || `arg${index}`;
+        const validation = argValidation[paramName];
+        // undefined means not yet validated, treat as invalid to be safe
+        return validation === true;
+      });
+
+      if (!allArgsValid) return "";
+
+      // Return args array in viem-compatible format
+      return JSON.stringify(args, null, 2);
+    } catch (error) {
+      console.error("Error creating JSON representation:", error);
+      return `Error: ${error.message}`;
+    }
+  }, [selectedFunctionAbi, functionArgs, argValidation]);
 
   // Encode transaction data using viem
   const encodedTxData = useMemo(() => {
@@ -108,16 +175,37 @@ function TransactionBuilder() {
       // Check if all required args are provided
       const hasAllArgs = selectedFunctionAbi.inputs.every((input, index) => {
         const paramName = input.name || `arg${index}`;
-        return (
-          functionArgs[paramName] !== undefined &&
-          functionArgs[paramName] !== ""
-        );
+        const value = functionArgs[paramName];
+
+        // For arrays, check if it exists (empty arrays are valid)
+        if (Array.isArray(value)) {
+          return true;
+        }
+
+        // For other types, check if not empty
+        return value !== undefined && value !== "";
       });
 
       if (!hasAllArgs) return "";
 
+      // Check if all args are valid
+      const allArgsValid = selectedFunctionAbi.inputs.every((input, index) => {
+        const paramName = input.name || `arg${index}`;
+        const validation = argValidation[paramName];
+        // undefined means not yet validated, treat as invalid to be safe
+        return validation === true;
+      });
+
+      if (!allArgsValid) return "";
+
+      // Get the correct ABI
+      const contractAbi =
+        selectedContract === "🧪 ArrayTestContract"
+          ? TEST_CONTRACT_ABI
+          : abis[selectedContract];
+
       const data = encodeFunctionData({
-        abi: abis[selectedContract],
+        abi: contractAbi,
         functionName: selectedFunctionAbi.name,
         args: args,
       });
@@ -127,7 +215,7 @@ function TransactionBuilder() {
       console.error("Error encoding transaction data:", error);
       return `Error: ${error.message}`;
     }
-  }, [selectedContract, selectedFunctionAbi, functionArgs]);
+  }, [selectedContract, selectedFunctionAbi, functionArgs, argValidation]);
 
   return (
     <div className="p-5 border border-blue-500 rounded-lg m-5 bg-blue-50">
@@ -181,18 +269,23 @@ function TransactionBuilder() {
             {selectedFunctionAbi.inputs.map((input, index) => {
               const paramName = input.name || `arg${index}`;
               const inputId = `${selectedContract}-${selectedFunction}-${paramName}`;
+              // Default value should be [] for arrays, "" for other types
+              const isArrayType =
+                input.type.includes("[]") || /\[\d+\]/.test(input.type);
+              const defaultValue = isArrayType ? [] : "";
               return (
-                <div key={index}>
+                <div key={inputId}>
                   <label
                     htmlFor={inputId}
                     className="block text-xs text-gray-600 mb-1 cursor-pointer"
                   >
-                    {paramName} ({input.type})
+                    {paramName}: {input.type}
                   </label>
                   <InputRouter
                     type={input.type}
-                    value={functionArgs[paramName] || ""}
+                    value={functionArgs[paramName] ?? defaultValue}
                     onChange={(value) => handleArgChange(paramName, value)}
+                    onValidationChange={(isValid) => handleArgValidation(paramName, isValid)}
                     name={inputId}
                     id={inputId}
                   />
@@ -226,6 +319,31 @@ function TransactionBuilder() {
             </p>
           </div>
         )}
+
+      {/* JSON Representation */}
+      {selectedFunctionAbi && (
+        <div className="mb-4">
+          <label
+            htmlFor="json-tx-data"
+            className="block text-sm font-medium text-gray-700 mb-2 cursor-pointer"
+          >
+            JSON Representation
+          </label>
+          <textarea
+            id="json-tx-data"
+            value={jsonTxData}
+            readOnly
+            rows={8}
+            className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900 font-mono text-sm"
+            placeholder="Fill in all arguments to see JSON data..."
+          />
+          {jsonTxData && !jsonTxData.startsWith("Error") && (
+            <p className="text-xs text-gray-500 mt-1">
+              Human-readable representation of the transaction
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Encoded Transaction Data */}
       {selectedFunctionAbi && (
