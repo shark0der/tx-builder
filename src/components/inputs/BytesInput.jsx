@@ -1,12 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-function BytesInput({
-  value,
-  onChange,
-  onValidationChange,
-  type = "bytes",
-  id,
-}) {
+function BytesInput({ value, onChange, onValidationChange, type = "bytes", id }) {
   const [error, setError] = useState("");
 
   // Extract byte size from type (e.g., bytes32 -> 32, bytes -> null for dynamic)
@@ -18,11 +12,7 @@ function BytesInput({
   const validateValue = useCallback(
     (inputValue) => {
       // Guard against non-string values (can happen during component transitions)
-      if (
-        typeof inputValue !== "string" ||
-        !inputValue ||
-        inputValue.trim() === ""
-      ) {
+      if (typeof inputValue !== "string" || !inputValue || inputValue.trim() === "") {
         setError("");
         return false;
       }
@@ -99,9 +89,7 @@ function BytesInput({
       />
       {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
       {byteSize && !error && (
-        <p className="text-gray-500 text-xs mt-1">
-          Requires {byteSize * 2} hex characters
-        </p>
+        <p className="text-gray-500 text-xs mt-1">Requires {byteSize * 2} hex characters</p>
       )}
     </div>
   );

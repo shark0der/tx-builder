@@ -1,8 +1,9 @@
 import "@rainbow-me/rainbowkit/styles.css";
+
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { WagmiProvider, createConfig, http } from "wagmi";
-import { mainnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createConfig, http, WagmiProvider } from "wagmi";
+import { mainnet } from "wagmi/chains";
 import { injected /* walletConnect */ } from "wagmi/connectors";
 
 const config = createConfig({

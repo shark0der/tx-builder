@@ -1,12 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-function IntInput({
-  value,
-  onChange,
-  onValidationChange,
-  type = "int256",
-  id,
-}) {
+function IntInput({ value, onChange, onValidationChange, type = "int256", id }) {
   const [error, setError] = useState("");
 
   // Extract bit size from type (e.g., int256 -> 256, int -> 256)

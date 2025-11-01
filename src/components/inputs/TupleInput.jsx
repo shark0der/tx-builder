@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import InputRouter from "./InputRouter";
 
 // Memoized field input to prevent unnecessary re-renders
@@ -35,14 +36,7 @@ const MemoizedFieldInput = memo(function MemoizedFieldInput({
   );
 });
 
-function TupleInput({
-  components = [],
-  value,
-  onChange,
-  onValidationChange,
-  id,
-  depth = 0,
-}) {
+function TupleInput({ components = [], value, onChange, onValidationChange, id, depth = 0 }) {
   // Track validation state for each field
   const [fieldValidation, setFieldValidation] = useState({});
 

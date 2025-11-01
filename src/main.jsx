@@ -1,8 +1,10 @@
+import "./index.css";
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App.jsx";
-// import { WalletProvider } from "./WalletProvider.jsx";
+
+import App from "./components/App.jsx";
+// import { WalletProvider } from "./components/WalletProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

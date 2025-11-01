@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function SearchableDropdown({ options, value, onChange, placeholder, id }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -71,9 +71,7 @@ function SearchableDropdown({ options, value, onChange, placeholder, id }) {
           }
         } else {
           // Navigate through filtered options when open
-          setHighlightedIndex((prev) =>
-            prev < filteredOptions.length - 1 ? prev + 1 : prev
-          );
+          setHighlightedIndex((prev) => (prev < filteredOptions.length - 1 ? prev + 1 : prev));
         }
         break;
       case "ArrowUp":
@@ -91,11 +89,7 @@ function SearchableDropdown({ options, value, onChange, placeholder, id }) {
         break;
       case "Enter":
         e.preventDefault();
-        if (
-          isOpen &&
-          highlightedIndex >= 0 &&
-          filteredOptions[highlightedIndex]
-        ) {
+        if (isOpen && highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
           handleSelect(filteredOptions[highlightedIndex]);
         }
         break;
@@ -135,9 +129,7 @@ function SearchableDropdown({ options, value, onChange, placeholder, id }) {
         onClick={handleToggle}
         className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 text-left flex justify-between items-center"
       >
-        <span
-          className={`truncate font-mono text-sm ${selectedLabel ? "" : "text-gray-500"}`}
-        >
+        <span className={`truncate font-mono text-sm ${selectedLabel ? "" : "text-gray-500"}`}>
           {selectedLabel || placeholder}
         </span>
         <svg
@@ -146,12 +138,7 @@ function SearchableDropdown({ options, value, onChange, placeholder, id }) {
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
@@ -187,9 +174,7 @@ function SearchableDropdown({ options, value, onChange, placeholder, id }) {
                 </button>
               ))
             ) : (
-              <div className="px-3 py-2 text-gray-500 text-sm">
-                No results found
-              </div>
+              <div className="px-3 py-2 text-gray-500 text-sm">No results found</div>
             )}
           </div>
         </div>

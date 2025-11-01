@@ -1,10 +1,11 @@
 import js from "@eslint/js";
-import globals from "globals";
+import { defineConfig, globalIgnores } from "eslint/config";
+import prettierConfig from "eslint-config-prettier";
+import prettier from "eslint-plugin-prettier";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import prettier from "eslint-plugin-prettier";
-import prettierConfig from "eslint-config-prettier";
-import { defineConfig, globalIgnores } from "eslint/config";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+import globals from "globals";
 
 export default defineConfig([
   globalIgnores(["dist"]),
@@ -26,11 +27,15 @@ export default defineConfig([
     },
     plugins: {
       prettier,
+      "simple-import-sort": simpleImportSort,
     },
     rules: {
+      "arrow-parens": ["error", "as-needed"],
       "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
-      semi: ["error", "always"],
       "prettier/prettier": "error",
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+      semi: ["error", "always"],
     },
   },
   prettierConfig,
