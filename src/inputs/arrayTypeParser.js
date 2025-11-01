@@ -76,9 +76,13 @@ export function getElementType(type) {
     return baseType;
   }
 
-  // Reconstruct with remaining dimensions
+  // Reconstruct with remaining dimensions (reverse order for Solidity notation)
   return (
-    baseType + elementDimensions.map((d) => `[${d === null ? "" : d}]`).join("")
+    baseType +
+    [...elementDimensions]
+      .reverse()
+      .map((d) => `[${d === null ? "" : d}]`)
+      .join("")
   );
 }
 
