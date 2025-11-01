@@ -77,7 +77,9 @@ export function getElementType(type) {
   }
 
   // Reconstruct with remaining dimensions
-  return baseType + elementDimensions.map(d => `[${d === null ? '' : d}]`).join('');
+  return (
+    baseType + elementDimensions.map((d) => `[${d === null ? "" : d}]`).join("")
+  );
 }
 
 /**
@@ -89,4 +91,3 @@ export function getArraySize(type) {
   const { dimensions } = parseArrayType(type);
   return dimensions.length > 0 ? dimensions[0] : null;
 }
-

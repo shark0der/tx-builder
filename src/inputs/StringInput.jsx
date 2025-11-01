@@ -27,4 +27,3 @@ function StringInput({ value, onChange, onValidationChange, id }) {
 }
 
 export default StringInput;
-

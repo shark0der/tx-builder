@@ -1,51 +1,60 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-function IntInput({ value, onChange, onValidationChange, type = "int256", id }) {
+function IntInput({
+  value,
+  onChange,
+  onValidationChange,
+  type = "int256",
+  id,
+}) {
   const [error, setError] = useState("");
 
   // Extract bit size from type (e.g., int256 -> 256, int -> 256)
-  const getBitSize = () => {
+  const getBitSize = useCallback(() => {
     const match = type.match(/int(\d+)/);
     return match ? parseInt(match[1]) : 256;
-  };
+  }, [type]);
 
-  const validateValue = (inputValue) => {
-    if (!inputValue || inputValue.trim() === "") {
-      setError("");
-      return false;
-    }
-
-    // Check if it's a valid signed integer
-    if (!/^-?\d+$/.test(inputValue.trim())) {
-      setError("Must be a valid integer");
-      return false;
-    }
-
-    try {
-      const bigIntValue = BigInt(inputValue.trim());
-
-      // Check min/max value based on bit size
-      const bitSize = getBitSize();
-      const maxValue = (1n << BigInt(bitSize - 1)) - 1n;
-      const minValue = -(1n << BigInt(bitSize - 1));
-
-      if (bigIntValue > maxValue) {
-        setError(`Exceeds max value for ${type}: ${maxValue.toString()}`);
+  const validateValue = useCallback(
+    (inputValue) => {
+      if (!inputValue || inputValue.trim() === "") {
+        setError("");
         return false;
       }
 
-      if (bigIntValue < minValue) {
-        setError(`Below min value for ${type}: ${minValue.toString()}`);
+      // Check if it's a valid signed integer
+      if (!/^-?\d+$/.test(inputValue.trim())) {
+        setError("Must be a valid integer");
         return false;
       }
 
-      setError("");
-      return true;
-    } catch (e) {
-      setError("Invalid number");
-      return false;
-    }
-  };
+      try {
+        const bigIntValue = BigInt(inputValue.trim());
+
+        // Check min/max value based on bit size
+        const bitSize = getBitSize();
+        const maxValue = (1n << BigInt(bitSize - 1)) - 1n;
+        const minValue = -(1n << BigInt(bitSize - 1));
+
+        if (bigIntValue > maxValue) {
+          setError(`Exceeds max value for ${type}: ${maxValue.toString()}`);
+          return false;
+        }
+
+        if (bigIntValue < minValue) {
+          setError(`Below min value for ${type}: ${minValue.toString()}`);
+          return false;
+        }
+
+        setError("");
+        return true;
+      } catch {
+        setError("Invalid number");
+        return false;
+      }
+    },
+    [type, getBitSize]
+  );
 
   const handleChange = (e) => {
     const newValue = e.target.value;
@@ -61,7 +70,7 @@ function IntInput({ value, onChange, onValidationChange, type = "int256", id }) 
     if (onValidationChange) {
       onValidationChange(isValid);
     }
-  }, [value, onValidationChange]);
+  }, [value, onValidationChange, validateValue]);
 
   return (
     <div>
@@ -81,4 +90,3 @@ function IntInput({ value, onChange, onValidationChange, type = "int256", id }) 
 }
 
 export default IntInput;
-

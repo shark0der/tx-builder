@@ -42,7 +42,13 @@ function TransactionBuilder() {
 
   // Generate function signature
   const getFunctionSignature = (fn) => {
-    return `${fn.name}(${fn.inputs.map((i) => i.type).join(",")})`;
+    const params = fn.inputs
+      .map((i, idx) => {
+        const name = i.name || `arg${idx}`;
+        return `${i.type} ${name}`;
+      })
+      .join(", ");
+    return `${fn.name}(${params})`;
   };
 
   // Get write functions for selected contract
@@ -81,7 +87,7 @@ function TransactionBuilder() {
   const selectedFunctionAbi = useMemo(() => {
     if (!selectedFunction) return null;
     return writeFunctions.find((fn) => {
-      const signature = `${fn.name}(${fn.inputs.map((i) => i.type).join(",")})`;
+      const signature = getFunctionSignature(fn);
       return signature === selectedFunction;
     });
   }, [selectedFunction, writeFunctions]);
@@ -121,12 +127,6 @@ function TransactionBuilder() {
     if (!selectedFunctionAbi) return "";
 
     try {
-      // Prepare args array in the correct order (viem format)
-      const args = selectedFunctionAbi.inputs.map((input, index) => {
-        const paramName = input.name || `arg${index}`;
-        return functionArgs[paramName];
-      });
-
       // Check if all required args are provided
       const hasAllArgs = selectedFunctionAbi.inputs.every((input, index) => {
         const paramName = input.name || `arg${index}`;
@@ -153,8 +153,15 @@ function TransactionBuilder() {
 
       if (!allArgsValid) return "";
 
-      // Return args array in viem-compatible format
-      return JSON.stringify(args, null, 2);
+      // Create object with parameter names as keys
+      const argsObject = {};
+      selectedFunctionAbi.inputs.forEach((input, index) => {
+        const paramName = input.name || `arg${index}`;
+        argsObject[paramName] = functionArgs[paramName];
+      });
+
+      // Return args as object for better readability
+      return JSON.stringify(argsObject, null, 2);
     } catch (error) {
       console.error("Error creating JSON representation:", error);
       return `Error: ${error.message}`;
@@ -219,18 +226,8 @@ function TransactionBuilder() {
 
   return (
     <div className="p-5 border border-blue-500 rounded-lg m-5 bg-blue-50">
-      <h3 className="text-lg font-semibold mb-4 text-blue-800">
-        Transaction Builder
-      </h3>
-
       {/* Contract Selector */}
       <div className="mb-4">
-        <label
-          htmlFor="contract-selector"
-          className="block text-sm font-medium text-gray-700 mb-2 cursor-pointer"
-        >
-          Select Contract
-        </label>
         <SearchableDropdown
           id="contract-selector"
           options={contractOptions}
@@ -243,12 +240,6 @@ function TransactionBuilder() {
       {/* Function Selector */}
       {selectedContract && writeFunctions.length > 0 && (
         <div className="mb-4">
-          <label
-            htmlFor="function-selector"
-            className="block text-sm font-medium text-gray-700 mb-2 cursor-pointer"
-          >
-            Select Function
-          </label>
           <SearchableDropdown
             id="function-selector"
             options={functionOptions}
@@ -265,16 +256,17 @@ function TransactionBuilder() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Function Arguments
           </label>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {selectedFunctionAbi.inputs.map((input, index) => {
               const paramName = input.name || `arg${index}`;
               const inputId = `${selectedContract}-${selectedFunction}-${paramName}`;
-              // Default value should be [] for arrays, "" for other types
+              // Default value should be [] for arrays, {} for tuples, "" for other types
               const isArrayType =
                 input.type.includes("[]") || /\[\d+\]/.test(input.type);
-              const defaultValue = isArrayType ? [] : "";
+              const isTupleType = input.type === "tuple";
+              const defaultValue = isArrayType ? [] : isTupleType ? {} : "";
               return (
-                <div key={inputId}>
+                <div key={inputId} className="mt-4">
                   <label
                     htmlFor={inputId}
                     className="block text-xs text-gray-600 mb-1 cursor-pointer"
@@ -283,9 +275,12 @@ function TransactionBuilder() {
                   </label>
                   <InputRouter
                     type={input.type}
+                    components={input.components}
                     value={functionArgs[paramName] ?? defaultValue}
                     onChange={(value) => handleArgChange(paramName, value)}
-                    onValidationChange={(isValid) => handleArgValidation(paramName, isValid)}
+                    onValidationChange={(isValid) =>
+                      handleArgValidation(paramName, isValid)
+                    }
                     name={inputId}
                     id={inputId}
                   />

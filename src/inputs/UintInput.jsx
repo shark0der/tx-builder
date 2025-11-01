@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 
-function UintInput({ value, onChange, onValidationChange, type = "uint256", id }) {
+function UintInput({
+  value,
+  onChange,
+  onValidationChange,
+  type = "uint256",
+  id,
+}) {
   const [error, setError] = useState("");
 
   const validateValue = useCallback(

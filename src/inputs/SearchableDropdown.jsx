@@ -135,7 +135,9 @@ function SearchableDropdown({ options, value, onChange, placeholder, id }) {
         onClick={handleToggle}
         className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 text-left flex justify-between items-center"
       >
-        <span className={`truncate ${selectedLabel ? "" : "text-gray-500"}`}>
+        <span
+          className={`truncate font-mono text-sm ${selectedLabel ? "" : "text-gray-500"}`}
+        >
           {selectedLabel || placeholder}
         </span>
         <svg
@@ -177,7 +179,7 @@ function SearchableDropdown({ options, value, onChange, placeholder, id }) {
                   ref={(el) => (optionRefs.current[index] = el)}
                   type="button"
                   onClick={() => handleSelect(option)}
-                  className={`w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors truncate ${
+                  className={`w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors truncate font-mono text-sm ${
                     option.value === value ? "bg-blue-100 font-medium" : ""
                   } ${highlightedIndex === index ? "bg-blue-200" : ""}`}
                 >

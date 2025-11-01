@@ -6,9 +6,11 @@ import IntInput from "./IntInput";
 import AddressInput from "./AddressInput";
 import StringInput from "./StringInput";
 import BytesInput from "./BytesInput";
+import TupleInput from "./TupleInput";
 
 function ArrayInput({
   type,
+  components,
   value,
   onChange,
   onValidationChange,
@@ -32,6 +34,10 @@ function ArrayInput({
     const normalizedType = elementType.trim().toLowerCase();
     if (normalizedType === "bool") {
       return false;
+    }
+    // For tuples, return empty object
+    if (normalizedType === "tuple") {
+      return {};
     }
     // For nested arrays, return empty array
     if (isArrayType(elementType)) {
@@ -169,6 +175,7 @@ function ArrayInput({
 
   const paddingLeft = depth * 20;
   const isElementArray = isArrayType(elementType);
+  const isElementTuple = elementType.trim().toLowerCase() === "tuple";
 
   // Check if fixed-size array has wrong length
   const hasLengthError = isFixedSize && arrayItems.length !== firstDimension;
@@ -205,6 +212,20 @@ function ArrayInput({
                 // Recursively render nested array
                 <ArrayInput
                   type={elementType}
+                  components={components} // Pass components for tuple arrays
+                  value={item.value}
+                  onChange={(newValue) => handleItemChange(index, newValue)}
+                  onValidationChange={(isValid) =>
+                    handleItemValidation(item.id, isValid)
+                  }
+                  id={`${id}-${index}`}
+                  depth={depth + 1}
+                />
+              ) : isElementTuple ? (
+                // Render tuple elements
+                <TupleInput
+                  type={elementType}
+                  components={components} // Components from parent for tuple arrays
                   value={item.value}
                   onChange={(newValue) => handleItemChange(index, newValue)}
                   onValidationChange={(isValid) =>
@@ -280,8 +301,29 @@ function ArrayInput({
 
 // Direct input selector to avoid circular dependency with InputRouter
 // This replicates the InputRouter logic for base types only
-function BaseInputSelector({ type, value, onChange, onValidationChange, id }) {
+function BaseInputSelector({
+  type,
+  components,
+  value,
+  onChange,
+  onValidationChange,
+  id,
+}) {
   const normalizedType = type.trim().toLowerCase();
+
+  // Tuple type
+  if (normalizedType === "tuple") {
+    return (
+      <TupleInput
+        type={type}
+        components={components}
+        value={value}
+        onChange={onChange}
+        onValidationChange={onValidationChange}
+        id={id}
+      />
+    );
+  }
 
   // Boolean type
   if (normalizedType === "bool") {

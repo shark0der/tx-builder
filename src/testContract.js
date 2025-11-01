@@ -187,4 +187,184 @@ export const TEST_CONTRACT_ABI = [
     outputs: [],
     stateMutability: "payable",
   },
+  {
+    type: "function",
+    name: "testSimpleTuple",
+    inputs: [
+      {
+        name: "person",
+        type: "tuple",
+        components: [
+          {
+            name: "name",
+            type: "string",
+          },
+          {
+            name: "age",
+            type: "uint256",
+          },
+          {
+            name: "wallet",
+            type: "address",
+          },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "testTupleArray",
+    inputs: [
+      {
+        name: "people",
+        type: "tuple[]",
+        components: [
+          {
+            name: "name",
+            type: "string",
+          },
+          {
+            name: "age",
+            type: "uint256",
+          },
+          {
+            name: "isActive",
+            type: "bool",
+          },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "testNestedTuple",
+    inputs: [
+      {
+        name: "transaction",
+        type: "tuple",
+        components: [
+          {
+            name: "id",
+            type: "uint256",
+          },
+          {
+            name: "from",
+            type: "tuple",
+            components: [
+              {
+                name: "wallet",
+                type: "address",
+              },
+              {
+                name: "balance",
+                type: "uint256",
+              },
+            ],
+          },
+          {
+            name: "to",
+            type: "tuple",
+            components: [
+              {
+                name: "wallet",
+                type: "address",
+              },
+              {
+                name: "balance",
+                type: "uint256",
+              },
+            ],
+          },
+          {
+            name: "amount",
+            type: "uint256",
+          },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "testTupleWithArrays",
+    inputs: [
+      {
+        name: "data",
+        type: "tuple",
+        components: [
+          {
+            name: "ids",
+            type: "uint256[]",
+          },
+          {
+            name: "addresses",
+            type: "address[3]",
+          },
+          {
+            name: "enabled",
+            type: "bool",
+          },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "testFixedTupleArray",
+    inputs: [
+      {
+        name: "records",
+        type: "tuple[2]",
+        components: [
+          {
+            name: "id",
+            type: "uint256",
+          },
+          {
+            name: "value",
+            type: "string",
+          },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "testComplexMixed",
+    inputs: [
+      {
+        name: "id",
+        type: "uint256",
+      },
+      {
+        name: "config",
+        type: "tuple",
+        components: [
+          {
+            name: "name",
+            type: "string",
+          },
+          {
+            name: "params",
+            type: "uint256[]",
+          },
+        ],
+      },
+      {
+        name: "enabled",
+        type: "bool",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
 ];
