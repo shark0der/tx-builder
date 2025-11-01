@@ -1,5 +1,39 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import InputRouter from "./InputRouter";
+
+// Memoized field input to prevent unnecessary re-renders
+const MemoizedFieldInput = memo(function MemoizedFieldInput({
+  type,
+  components,
+  value,
+  fieldName,
+  fieldId,
+  depth,
+  onFieldChange,
+  onFieldValidation,
+}) {
+  const handleChange = useCallback(
+    (newValue) => onFieldChange(fieldName, newValue),
+    [onFieldChange, fieldName]
+  );
+
+  const handleValidation = useCallback(
+    (isValid) => onFieldValidation(fieldName, isValid),
+    [onFieldValidation, fieldName]
+  );
+
+  return (
+    <InputRouter
+      type={type}
+      components={components}
+      value={value}
+      onChange={handleChange}
+      onValidationChange={handleValidation}
+      id={fieldId}
+      depth={depth}
+    />
+  );
+});
 
 function TupleInput({
   components = [],
@@ -49,39 +83,54 @@ function TupleInput({
     onChangeRef.current = onChange;
   }, [onChange]);
 
+  // Store latest onValidationChange in a ref to avoid re-running effect
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+  }, [onValidationChange]);
+
   // Update parent whenever tupleFields changes
   useEffect(() => {
     onChangeRef.current(tupleFields);
   }, [tupleFields]);
 
-  // Update parent validation whenever field validation changes
-  useEffect(() => {
+  // Compute validation state
+  const isValid = useMemo(() => {
     // Check if all fields are valid
-    const allFieldsValid = components.every((component, index) => {
+    return components.every((component, index) => {
       const fieldName = component.name || `field${index}`;
       const validation = fieldValidation[fieldName];
-      // undefined means not yet validated, which we treat as valid
-      return validation !== false;
+      // undefined means not yet validated, treat as invalid
+      // Only true means the field is valid and populated
+      return validation === true;
     });
+  }, [fieldValidation, components]);
 
-    if (onValidationChange) {
-      onValidationChange(allFieldsValid);
+  // Update parent validation whenever isValid changes
+  useEffect(() => {
+    if (onValidationChangeRef.current) {
+      onValidationChangeRef.current(isValid);
     }
-  }, [fieldValidation, components, onValidationChange]);
+  }, [isValid]);
 
-  const handleFieldChange = (fieldName, newValue) => {
+  const handleFieldChange = useCallback((fieldName, newValue) => {
     setTupleFields((prev) => ({
       ...prev,
       [fieldName]: newValue,
     }));
-  };
+  }, []);
 
-  const handleFieldValidation = (fieldName, isValid) => {
-    setFieldValidation((prev) => ({
-      ...prev,
-      [fieldName]: isValid,
-    }));
-  };
+  const handleFieldValidation = useCallback((fieldName, isValid) => {
+    setFieldValidation((prev) => {
+      if (prev[fieldName] === isValid) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [fieldName]: isValid,
+      };
+    });
+  }, []);
 
   const paddingLeft = depth * 20;
 
@@ -108,16 +157,15 @@ function TupleInput({
               </label>
 
               {/* Field Input */}
-              <InputRouter
+              <MemoizedFieldInput
                 type={component.type}
                 components={component.components} // Pass components for nested tuples
                 value={fieldValue}
-                onChange={(newValue) => handleFieldChange(fieldName, newValue)}
-                onValidationChange={(isValid) =>
-                  handleFieldValidation(fieldName, isValid)
-                }
-                id={fieldId}
+                fieldName={fieldName}
+                fieldId={fieldId}
                 depth={depth + 1}
+                onFieldChange={handleFieldChange}
+                onFieldValidation={handleFieldValidation}
               />
             </div>
           );

@@ -1,16 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 function StringInput({ value, onChange, onValidationChange, id }) {
   const handleChange = (e) => {
     onChange(e.target.value);
   };
 
+  // Store onValidationChange in a ref to avoid re-running effect
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+  }, [onValidationChange]);
+
   // Empty strings are valid values in Solidity
   useEffect(() => {
-    if (onValidationChange) {
-      onValidationChange(true);
+    if (onValidationChangeRef.current) {
+      onValidationChangeRef.current(true);
     }
-  }, [value, onValidationChange]);
+  }, [value]);
 
   return (
     <div>

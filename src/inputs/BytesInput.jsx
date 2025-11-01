@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 function BytesInput({
   value,
@@ -69,12 +69,18 @@ function BytesInput({
     }
   };
 
+  // Store onValidationChange in a ref to avoid re-running effect
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+  }, [onValidationChange]);
+
   useEffect(() => {
     const isValid = validateValue(value);
-    if (onValidationChange) {
-      onValidationChange(isValid);
+    if (onValidationChangeRef.current) {
+      onValidationChangeRef.current(isValid);
     }
-  }, [value, validateValue, onValidationChange]);
+  }, [value, validateValue]);
 
   const byteSize = getByteSize();
   const placeholder = byteSize ? `0x${"".padEnd(byteSize * 2, "0")}` : "0x...";

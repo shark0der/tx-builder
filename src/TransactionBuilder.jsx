@@ -160,27 +160,20 @@ function TransactionBuilder() {
     if (!selectedFunctionAbi) return "";
 
     try {
-      // Check if all required args are provided
-      const hasAllArgs = selectedFunctionAbi.inputs.every((input, index) => {
-        const paramName = input.name || `arg${index}`;
-        const value = functionArgs[paramName];
-
-        // For arrays, check if it exists (empty arrays are valid)
-        if (Array.isArray(value)) {
-          return true;
+      // First ensure all inputs have been validated
+      const allInputsValidated = selectedFunctionAbi.inputs.every(
+        (input, index) => {
+          const paramName = input.name || `arg${index}`;
+          return paramName in argValidation;
         }
+      );
 
-        // For other types, check if not empty
-        return value !== undefined && value !== "";
-      });
-
-      if (!hasAllArgs) return "";
+      if (!allInputsValidated) return "";
 
       // Check if all args are valid
       const allArgsValid = selectedFunctionAbi.inputs.every((input, index) => {
         const paramName = input.name || `arg${index}`;
         const validation = argValidation[paramName];
-        // undefined means not yet validated, treat as invalid to be safe
         return validation === true;
       });
 
@@ -206,37 +199,54 @@ function TransactionBuilder() {
     if (!selectedFunctionAbi) return "";
 
     try {
-      // Prepare args array in the correct order
-      const args = selectedFunctionAbi.inputs.map((input, index) => {
-        const paramName = input.name || `arg${index}`;
-        return functionArgs[paramName];
-      });
-
-      // Check if all required args are provided
-      const hasAllArgs = selectedFunctionAbi.inputs.every((input, index) => {
-        const paramName = input.name || `arg${index}`;
-        const value = functionArgs[paramName];
-
-        // For arrays, check if it exists (empty arrays are valid)
-        if (Array.isArray(value)) {
-          return true;
+      // First ensure all inputs have been validated
+      const allInputsValidated = selectedFunctionAbi.inputs.every(
+        (input, index) => {
+          const paramName = input.name || `arg${index}`;
+          return paramName in argValidation;
         }
+      );
 
-        // For other types, check if not empty
-        return value !== undefined && value !== "";
-      });
-
-      if (!hasAllArgs) return "";
+      if (!allInputsValidated) return "";
 
       // Check if all args are valid
       const allArgsValid = selectedFunctionAbi.inputs.every((input, index) => {
         const paramName = input.name || `arg${index}`;
         const validation = argValidation[paramName];
-        // undefined means not yet validated, treat as invalid to be safe
         return validation === true;
       });
 
       if (!allArgsValid) return "";
+
+      // Prepare args array in the correct order
+      const args = selectedFunctionAbi.inputs.map((input, index) => {
+        const paramName = input.name || `arg${index}`;
+        const value = functionArgs[paramName];
+
+        // Return the value as-is, the validation should ensure it's valid
+        return value;
+      });
+
+      // Double-check that no args are undefined or invalid
+      const hasValidArgs = args.every((arg, index) => {
+        const input = selectedFunctionAbi.inputs[index];
+        const type = input.type.toLowerCase();
+
+        // For arrays, empty is valid
+        if (Array.isArray(arg)) {
+          return true;
+        }
+
+        // For tuples/objects, check if it's an object
+        if (type === "tuple" || type.includes("tuple")) {
+          return arg !== null && typeof arg === "object";
+        }
+
+        // For other types, check if defined and not empty string
+        return arg !== undefined && arg !== "";
+      });
+
+      if (!hasValidArgs) return "";
 
       // Get the correct ABI
       const contractAbi =

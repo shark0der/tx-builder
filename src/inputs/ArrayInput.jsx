@@ -139,13 +139,24 @@ function ArrayInput({
     // Check if fixed-size array has wrong length
     const hasLengthError = isFixedSize && arrayItems.length !== firstDimension;
 
+    if (hasLengthError) {
+      return false;
+    }
+
+    // Empty arrays are valid for dynamic arrays
+    if (arrayItems.length === 0 && !isFixedSize) {
+      return true;
+    }
+
     // Check if all items are valid
     const allItemsValid = arrayItems.every((item) => {
       const validation = itemValidation[item.id];
-      return validation !== false; // undefined means not yet validated, which we treat as valid
+      // undefined means not yet validated, treat as invalid
+      // Only true means the item is valid and populated
+      return validation === true;
     });
 
-    return !hasLengthError && allItemsValid;
+    return allItemsValid;
   }, [itemValidation, arrayItems, isFixedSize, firstDimension]);
 
   // Update parent validation whenever isValid changes

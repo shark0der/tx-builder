@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 function AddressInput({ value, onChange, onValidationChange, id }) {
   const [error, setError] = useState("");
@@ -43,12 +43,18 @@ function AddressInput({ value, onChange, onValidationChange, id }) {
     }
   };
 
+  // Store onValidationChange in a ref to avoid re-running effect
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+  }, [onValidationChange]);
+
   useEffect(() => {
     const isValid = validateAddress(value);
-    if (onValidationChange) {
-      onValidationChange(isValid);
+    if (onValidationChangeRef.current) {
+      onValidationChangeRef.current(isValid);
     }
-  }, [value, onValidationChange]);
+  }, [value]);
 
   return (
     <div>

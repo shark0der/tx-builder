@@ -1,16 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 function BoolInput({ value, onChange, onValidationChange, id }) {
   const handleToggle = () => {
     onChange(!value);
   };
 
+  // Store onValidationChange in a ref to avoid re-running effect
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+  }, [onValidationChange]);
+
   // Bool inputs are always valid
   useEffect(() => {
-    if (onValidationChange) {
-      onValidationChange(true);
+    if (onValidationChangeRef.current) {
+      onValidationChangeRef.current(true);
     }
-  }, [value, onValidationChange]);
+  }, [value]);
 
   return (
     <label className="flex items-center gap-3 cursor-pointer">
