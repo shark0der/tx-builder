@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { parseArrayType, getElementType, isArrayType } from "./arrayTypeParser";
 import BoolInput from "./BoolInput";
 import UintInput from "./UintInput";
@@ -81,6 +81,12 @@ function ArrayInput({
     onChangeRef.current = onChange;
   }, [onChange]);
 
+  // Store latest onValidationChange in a ref to avoid re-running effect
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+  }, [onValidationChange]);
+
   // Reset array when type changes (e.g., switching from uint256[5] to uint256[])
   const prevTypeRef = useRef(type);
   useEffect(() => {
@@ -101,25 +107,35 @@ function ArrayInput({
 
   // Ensure fixed-size arrays maintain correct length
   useEffect(() => {
-    if (isFixedSize && arrayItems.length !== firstDimension) {
-      const newArray = [...arrayItems];
-      // Pad with default values if too short
-      while (newArray.length < firstDimension) {
-        newArray.push({ id: getUniqueId(), value: getDefaultValue() });
-      }
-      // Truncate if too long
-      const correctedArray = newArray.slice(0, firstDimension);
-      setArrayItems(correctedArray);
+    if (isFixedSize) {
+      setArrayItems((prevItems) => {
+        if (prevItems.length === firstDimension) {
+          return prevItems; // No change needed
+        }
+        const newArray = [...prevItems];
+        // Pad with default values if too short
+        while (newArray.length < firstDimension) {
+          newArray.push({ id: getUniqueId(), value: getDefaultValue() });
+        }
+        // Truncate if too long
+        return newArray.slice(0, firstDimension);
+      });
     }
-  }, [isFixedSize, firstDimension, arrayItems, getDefaultValue]);
+  }, [isFixedSize, firstDimension, getDefaultValue]);
 
-  // Update parent whenever arrayItems changes (including on mount)
-  useEffect(() => {
-    onChangeRef.current(arrayItems.map((item) => item.value));
-  }, [arrayItems]);
+  // Memoize the array values to prevent unnecessary updates
+  const arrayValues = useMemo(
+    () => arrayItems.map((item) => item.value),
+    [arrayItems]
+  );
 
-  // Update parent validation whenever item validation or array length changes
+  // Update parent whenever arrayValues changes (including on mount)
   useEffect(() => {
+    onChangeRef.current(arrayValues);
+  }, [arrayValues]);
+
+  // Compute validation state
+  const isValid = useMemo(() => {
     // Check if fixed-size array has wrong length
     const hasLengthError = isFixedSize && arrayItems.length !== firstDimension;
 
@@ -129,49 +145,61 @@ function ArrayInput({
       return validation !== false; // undefined means not yet validated, which we treat as valid
     });
 
-    const isValid = !hasLengthError && allItemsValid;
+    return !hasLengthError && allItemsValid;
+  }, [itemValidation, arrayItems, isFixedSize, firstDimension]);
 
-    if (onValidationChange) {
-      onValidationChange(isValid);
+  // Update parent validation whenever isValid changes
+  useEffect(() => {
+    if (onValidationChangeRef.current) {
+      onValidationChangeRef.current(isValid);
     }
-  }, [
-    itemValidation,
-    arrayItems,
-    isFixedSize,
-    firstDimension,
-    onValidationChange,
-  ]);
+  }, [isValid]);
 
-  const handleItemChange = (index, newValue) => {
-    const newArray = [...arrayItems];
-    newArray[index] = { ...newArray[index], value: newValue };
-    setArrayItems(newArray);
-  };
+  const handleItemChange = useCallback((index, newValue) => {
+    setArrayItems((prev) => {
+      const newArray = [...prev];
+      newArray[index] = { ...newArray[index], value: newValue };
+      return newArray;
+    });
+  }, []);
 
-  const handleItemValidation = (itemId, isValid) => {
-    setItemValidation((prev) => ({
-      ...prev,
-      [itemId]: isValid,
-    }));
-  };
+  const handleItemValidation = useCallback((itemId, isValid) => {
+    setItemValidation((prev) => {
+      if (prev[itemId] === isValid) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [itemId]: isValid,
+      };
+    });
+  }, []);
 
-  const handleAddItem = () => {
-    if (isFixedSize && arrayItems.length >= firstDimension) {
-      return; // Can't add more items to fixed-size array
-    }
-    setArrayItems([
-      ...arrayItems,
-      { id: getUniqueId(), value: getDefaultValue() },
-    ]);
-  };
+  const handleAddItem = useCallback(() => {
+    setArrayItems((prev) => {
+      if (isFixedSize && prev.length >= firstDimension) {
+        return prev; // Can't add more items to fixed-size array
+      }
+      return [...prev, { id: getUniqueId(), value: getDefaultValue() }];
+    });
+  }, [isFixedSize, firstDimension, getDefaultValue]);
 
-  const handleRemoveItem = (itemId) => {
-    if (isFixedSize) {
-      return; // Can't remove items from fixed-size array
-    }
-    const newArray = arrayItems.filter((item) => item.id !== itemId);
-    setArrayItems(newArray);
-  };
+  const handleRemoveItem = useCallback(
+    (itemId) => {
+      if (isFixedSize) {
+        return; // Can't remove items from fixed-size array
+      }
+      setArrayItems((prev) => prev.filter((item) => item.id !== itemId));
+      setItemValidation((prev) => {
+        if (!(itemId in prev)) {
+          return prev;
+        }
+        const { [itemId]: _removed, ...rest } = prev;
+        return rest;
+      });
+    },
+    [isFixedSize]
+  );
 
   const paddingLeft = depth * 20;
   const isElementArray = isArrayType(elementType);

@@ -70,7 +70,7 @@ function IntInput({
     if (onValidationChange) {
       onValidationChange(isValid);
     }
-  }, [value, onValidationChange, validateValue]);
+  }, [value, validateValue, onValidationChange]);
 
   return (
     <div>

@@ -74,7 +74,7 @@ function BytesInput({
     if (onValidationChange) {
       onValidationChange(isValid);
     }
-  }, [value, onValidationChange, validateValue]);
+  }, [value, validateValue, onValidationChange]);
 
   const byteSize = getByteSize();
   const placeholder = byteSize ? `0x${"".padEnd(byteSize * 2, "0")}` : "0x...";

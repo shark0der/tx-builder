@@ -1,9 +1,42 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { encodeFunctionData } from "viem";
 import { addresses, abis } from "@nexusmutual/deployments";
 import InputRouter from "./inputs/InputRouter";
 import SearchableDropdown from "./inputs/SearchableDropdown";
 import { TEST_CONTRACT_ADDRESS, TEST_CONTRACT_ABI } from "./testContract";
+
+// Memoized input wrapper to prevent unnecessary re-renders
+const MemoizedInput = memo(function MemoizedInput({
+  type,
+  components,
+  value,
+  paramName,
+  inputId,
+  onArgChange,
+  onArgValidation,
+}) {
+  const handleChange = useCallback(
+    (value) => onArgChange(paramName, value),
+    [onArgChange, paramName]
+  );
+
+  const handleValidation = useCallback(
+    (isValid) => onArgValidation(paramName, isValid),
+    [onArgValidation, paramName]
+  );
+
+  return (
+    <InputRouter
+      type={type}
+      components={components}
+      value={value}
+      onChange={handleChange}
+      onValidationChange={handleValidation}
+      name={inputId}
+      id={inputId}
+    />
+  );
+});
 
 function TransactionBuilder() {
   const [selectedContract, setSelectedContract] = useState("");
@@ -28,7 +61,7 @@ function TransactionBuilder() {
         contractsWithAbis.push({ name, address });
       }
     }
-    console.log("Available contracts:", contractsWithAbis.length);
+
     return contractsWithAbis.sort((a, b) => a.name.localeCompare(b.name));
   }, []);
 
@@ -108,19 +141,19 @@ function TransactionBuilder() {
     setEthValue("");
   };
 
-  const handleArgChange = (paramName, value) => {
+  const handleArgChange = useCallback((paramName, value) => {
     setFunctionArgs((prev) => ({
       ...prev,
       [paramName]: value,
     }));
-  };
+  }, []);
 
-  const handleArgValidation = (paramName, isValid) => {
+  const handleArgValidation = useCallback((paramName, isValid) => {
     setArgValidation((prev) => ({
       ...prev,
       [paramName]: isValid,
     }));
-  };
+  }, []);
 
   // JSON representation of transaction data
   const jsonTxData = useMemo(() => {
@@ -273,16 +306,14 @@ function TransactionBuilder() {
                   >
                     {paramName}: {input.type}
                   </label>
-                  <InputRouter
+                  <MemoizedInput
                     type={input.type}
                     components={input.components}
                     value={functionArgs[paramName] ?? defaultValue}
-                    onChange={(value) => handleArgChange(paramName, value)}
-                    onValidationChange={(isValid) =>
-                      handleArgValidation(paramName, isValid)
-                    }
-                    name={inputId}
-                    id={inputId}
+                    paramName={paramName}
+                    inputId={inputId}
+                    onArgChange={handleArgChange}
+                    onArgValidation={handleArgValidation}
                   />
                 </div>
               );
