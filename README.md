@@ -1,34 +1,45 @@
-# ETH Wallet Dashboard
+# Smart Contract Transaction Builder
 
-A simple React application built with wagmi.sh that connects to Ethereum wallets and displays ETH balances.
+A React application for building and encoding transaction data for Ethereum smart contracts.
 
 ## Features
 
-- Connect to Ethereum wallets (MetaMask, WalletConnect, etc.)
-- Display ETH balance in both formatted and raw (wei) formats
-- Responsive design with clean UI
-- Built with React, Vite, and wagmi
+- Interactive contract and function selection
+- Dynamic form generation for function parameters
+- Support for complex data types (arrays, tuples, nested structures)
+- Real-time transaction data encoding
+- JSON representation of transaction parameters
+- Test contract for array operations
 
-## Setup
+## Tech Stack
 
-1. Install dependencies:
+- **React 18** - UI framework
+- **Vite** - Build tool and development server
+- **Tailwind CSS** - Styling
+- **Viem** - Ethereum library for encoding
+
+## Installation
+
+1. Clone the repository and install dependencies:
 ```bash
 npm install
 ```
 
-2. **Configure WalletConnect (optional):**
-   - Get a project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/)
-   - Update the project ID in `src/wagmi.js`:
-   ```javascript
-   walletConnect({ projectId: 'your-walletconnect-project-id' })
-   ```
-
-3. Start the development server:
+2. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+3. Open your browser and navigate to `http://localhost:5173`
+
+## Usage
+
+1. **Select a Contract**: Choose from available contracts in the dropdown
+2. **Pick a Function**: Select the function you want to call
+3. **Fill Parameters**: Enter values for all function parameters
+4. **Get Encoded Data**: Copy the encoded transaction data for use in your transactions
+
+The application automatically validates inputs and generates both human-readable JSON and encoded transaction data.
 
 ## Available Scripts
 
@@ -36,21 +47,22 @@ npm run dev
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix linting issues
 
-## Tech Stack
+## Project Structure
 
-- **React 18** - UI framework
-- **Vite** - Build tool and dev server
-- **wagmi** - React hooks for Ethereum
-- **viem** - Ethereum library
-- **@wagmi/connectors** - Wallet connectors
+```
+src/
+├── App.jsx                 # Main application component
+├── TransactionBuilder.jsx  # Core transaction builder logic
+├── inputs/                 # Input components for various data types
+│   ├── InputRouter.jsx     # Routes inputs to appropriate components
+│   ├── AddressInput.jsx    # Ethereum address validation
+│   ├── ArrayInput.jsx      # Dynamic array handling
+│   └── ...                 # Other specialized inputs
+└── testContract.js         # Test contract for development
+```
 
-## Supported Wallets
+## License
 
-- MetaMask
-- WalletConnect
-- Any injected wallet (Browser extension wallets)
-
-## Network
-
-Currently configured for Ethereum Mainnet. To add other networks, modify the chains in `src/wagmi.js`.
+MIT
